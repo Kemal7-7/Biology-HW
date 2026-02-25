@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Eco-Gate – Trial of the Living Web</title>
+  <style>
+    :root{
+      --bg:#06110b;
+      --panel:#0f2418;
+      --panel2:#0b1b12;
+      --border:#1f3f2c;
+      --spirit:#7ee08c;
+      --eco:#86b8ff;
+      --sys:#f0d37a;
+      --text:#e9f7ee;
+      --bad:#ff9b9b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial, sans-serif;background:var(--bg);color:var(--text);}
+    .wrap{max-width:1020px;margin:0 auto;padding:22px;}
+    h1{margin:0 0 6px;}
+    .subtitle{opacity:.85;margin-bottom:14px;}
+
+    .scene{
+      display:flex; gap:16px; align-items:stretch; flex-wrap:wrap;
+      background:linear-gradient(180deg, rgba(126,224,140,0.06), rgba(134,184,255,0.03));
+      border:1px solid var(--border); border-radius:16px; padding:14px;
+    }
+    .portrait{
+      flex:1 1 320px; min-width:280px;
+      display:flex; gap:12px; align-items:center;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border); border-radius:14px; padding:12px;
+    }
+    .avatar{
+      width:88px; height:88px; flex:0 0 88px;
+      border-radius:16px; border:1px solid var(--border);
+      background:#0c1e14;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .who{font-weight:900}
+    .tag{display:inline-block;margin-top:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:var(--panel2);font-size:13px;opacity:.95}
+    .spiritName{color:var(--spirit)}
+    .ecoName{color:var(--eco)}
+
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:16px;margin-top:14px;}
+    .pills{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--border);}
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    button.secondary{
+      background:#224a34;color:var(--text);
+      border:1px solid var(--border);
+      border-radius:12px;padding:10px 14px;
+      font-weight:900;cursor:pointer;
+    }
+    button.secondary:hover{filter:brightness(1.08)}
+
+    .chat{
+      margin-top:14px;
+      background:rgba(0,0,0,0.18);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      max-height: 52vh;
+      overflow:auto;
+    }
+
+    /* Speech bubbles */
+    .bubbleRow{
+      display:flex;
+      margin:10px 0;
+      align-items:flex-end;
+      gap:10px;
+      opacity:0;
+      transform: translateY(6px);
+      animation: popIn .22s ease-out forwards;
+    }
+    @keyframes popIn{to{opacity:1; transform: translateY(0);}}
+    .bubble{
+      max-width:min(720px, 92%);
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      position:relative;
+      line-height:1.35;
+      white-space:pre-wrap;
+      word-wrap:break-word;
+    }
+    .bubbleRow.spirit{justify-content:flex-start;}
+    .bubbleRow.eco{justify-content:flex-end;}
+    .bubbleRow.system{justify-content:center;}
+
+    .bubbleRow.spirit .bubble{background:rgba(126,224,140,0.10); border-color:rgba(126,224,140,0.30);}
+    .bubbleRow.eco .bubble{background:rgba(134,184,255,0.10); border-color:rgba(134,184,255,0.28);}
+    .bubbleRow.system .bubble{background:rgba(240,211,122,0.08); border-color:rgba(240,211,122,0.22);}
+
+    .bubbleRow.spirit .bubble:before{
+      content:""; position:absolute; left:-8px; bottom:12px;
+      width:14px; height:14px; background:rgba(126,224,140,0.10);
+      border-left:1px solid rgba(126,224,140,0.30);
+      border-bottom:1px solid rgba(126,224,140,0.30);
+      transform: rotate(45deg);
+      border-bottom-left-radius:3px;
+    }
+    .bubbleRow.eco .bubble:before{
+      content:""; position:absolute; right:-8px; bottom:12px;
+      width:14px; height:14px; background:rgba(134,184,255,0.10);
+      border-right:1px solid rgba(134,184,255,0.28);
+      border-bottom:1px solid rgba(134,184,255,0.28);
+      transform: rotate(-45deg);
+      border-bottom-right-radius:3px;
+    }
+
+    .nameLine{font-weight:900;margin-bottom:4px}
+    .nameLine.spirit{color:var(--spirit)}
+    .nameLine.eco{color:var(--eco)}
+    .nameLine.system{color:var(--sys); text-align:center}
+
+    /* Choices */
+    .choiceArea{margin-top:14px; display:none;}
+    .prompt{
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+    }
+    .blankSentence{margin-top:8px;font-size:16px}
+    .choices{
+      display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px;
+    }
+    @media (min-width: 760px){ .choices{grid-template-columns:1fr 1fr;} }
+    button.choice{
+      text-align:left;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 14px;
+      cursor:pointer;
+      background:var(--panel2);
+      color:var(--text);
+      font-size:16px;
+      font-weight:800;
+    }
+    button.choice:hover{filter:brightness(1.08)}
+    button.choice:disabled{cursor:not-allowed;opacity:.75}
+
+    .feedback{margin-top:12px}
+    .good{color:var(--spirit);font-weight:900}
+    .bad{color:var(--bad);font-weight:900}
+    .small{opacity:.85;font-size:14px;margin-top:6px}
+
+    .endArea{display:none;margin-top:14px}
+    .forestBox{
+      margin-top:12px;
+      border:1px solid rgba(126,224,140,0.25);
+      background:rgba(0,0,0,0.18);
+      border-radius:14px;
+      padding:12px;
+      overflow:auto;
+    }
+    pre{
+      margin:0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:13px;
+      line-height:1.2;
+      color:#c8f5d0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Eco-Gate – Trial of the Living Web</h1>
+    <div class="subtitle">Fill the blanks with 4 choices. Dialogue appears with a short delay (like a story).</div>
+
+    <div class="scene">
+      <div class="portrait">
+        <div class="avatar" aria-label="Tree Spirit">
+          <!-- Inline SVG Tree Spirit -->
+          <svg viewBox="0 0 120 120" width="88" height="88" role="img" aria-label="Tree Spirit icon">
+            <defs>
+              <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#0c2a18"/>
+                <stop offset="1" stop-color="#0a1a11"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="120" height="120" rx="18" fill="url(#g1)"/>
+            <circle cx="60" cy="52" r="34" fill="rgba(126,224,140,0.12)" stroke="rgba(126,224,140,0.25)" stroke-width="2"/>
+            <path d="M60 18 C35 22, 22 44, 26 62 C30 84, 44 92, 60 92 C76 92, 90 84, 94 62 C98 44, 85 22, 60 18 Z"
+                  fill="rgba(126,224,140,0.14)" stroke="rgba(126,224,140,0.35)" stroke-width="2"/>
+            <circle cx="47" cy="54" r="4" fill="#e9f7ee"/>
+            <circle cx="73" cy="54" r="4" fill="#e9f7ee"/>
+            <path d="M46 72 C52 78, 68 78, 74 72" stroke="#e9f7ee" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M20 88 C36 76, 44 74, 52 78" stroke="rgba(126,224,140,0.5)" stroke-width="3" fill="none"/>
+            <path d="M100 88 C84 76, 76 74, 68 78" stroke="rgba(126,224,140,0.5)" stroke-width="3" fill="none"/>
+            <rect x="54" y="86" width="12" height="22" rx="6" fill="rgba(126,224,140,0.25)" stroke="rgba(126,224,140,0.35)" stroke-width="2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="who spiritName">Tree Spirit</div>
+          <div class="tag">Guardian of the Living Web</div>
+        </div>
+      </div>
+
+      <div class="portrait">
+        <div class="avatar" aria-label="Ecologist">
+          <!-- Inline SVG Ecologist -->
+          <svg viewBox="0 0 120 120" width="88" height="88" role="img" aria-label="Ecologist icon">
+            <defs>
+              <linearGradient id="g2" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#0b1b2a"/>
+                <stop offset="1" stop-color="#08131f"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="120" height="120" rx="18" fill="url(#g2)"/>
+            <circle cx="60" cy="44" r="20" fill="rgba(233,247,238,0.85)"/>
+            <rect x="32" y="66" width="56" height="40" rx="16" fill="rgba(134,184,255,0.16)" stroke="rgba(134,184,255,0.35)" stroke-width="2"/>
+            <path d="M42 46 C48 40, 72 40, 78 46" stroke="#07130c" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <circle cx="52" cy="44" r="3" fill="#07130c"/>
+            <circle cx="68" cy="44" r="3" fill="#07130c"/>
+            <path d="M53 54 C58 58, 62 58, 67 54" stroke="#07130c" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M44 78 L76 78" stroke="rgba(134,184,255,0.55)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M44 90 L70 90" stroke="rgba(134,184,255,0.55)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="who ecoName">Young Ecologist</div>
+          <div class="tag">Prove your ecology vocabulary</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="pills">
+        <span class="pill">Score: <span id="score">0</span>/<span id="total">0</span></span>
+        <span class="pill">Challenge: <span id="qnum">0</span>/<span id="qtotal">0</span></span>
+        <span class="pill">Story speed: <span id="speedLabel">Normal</span></span>
+      </div>
+
+      <div class="row">
+        <button class="secondary" id="speedBtn">Toggle Speed</button>
+        <button class="secondary" id="restartBtnTop">Restart</button>
+      </div>
+
+      <div class="chat" id="chat"></div>
+
+      <div class="choiceArea" id="choiceArea">
+        <div class="prompt">
+          <div style="font-weight:900;color:var(--eco)">Fill the blank:</div>
+          <div class="blankSentence" id="blankSentence"></div>
+          <div class="choices" id="choices"></div>
+          <div class="feedback" id="feedback"></div>
+
+          <div class="row">
+            <button class="secondary" id="nextBtn" style="display:none;">Next</button>
+            <button class="secondary" id="restartBtn">Restart</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="endArea" id="endArea">
+        <div class="prompt">
+          <div style="font-weight:900;color:var(--sys)">You entered the Living Web.</div>
+          <div id="resultText" style="margin-top:8px;"></div>
+          <div class="forestBox" id="forestBox" style="display:none;">
+            <pre id="forestArt"></pre>
+          </div>
+          <div class="row">
+            <button class="secondary" id="restartBtnEnd">Play Again</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const introLines = [
+    { who: "system", text: "Eco-Gate – Trial of the Living Web is a role-play learning game. You are a young ecologist seeking entry to the ancient Living Web, a sacred forest where every organism is linked in balance." },
+    { who: "spirit", text: "Young seeker… the leaves whisper of your coming. Many tread these roots with empty words. Prove you belong among the Living Web. Speak truly, or the branches will close and turn you away." }
+  ];
+
+  const endingLines = [
+    { who: "spirit", text: "Then enter, true ecologist. The forest knows your name. Walk gently… and teach others what you have learned here." }
+  ];
+
+  const blanks = [
+    {
+      spirit: "First, tell me… what is the name for the complete living system I guard— all the creatures together with the air, water, soil, and sunlight that surround them?",
+      sentence: "That is an _____. It includes organisms (a community) plus the physical environment (biotic + abiotic factors).",
+      correct: "ecosystem",
+      choices: ["ecosystem","community","population","species"],
+      explain: "Ecosystem = community of organisms + physical environment (biotic + abiotic)."
+    },
+    {
+      spirit: "Many populations share my canopy and undergrowth. What do we call all the different kinds of organisms living and interacting together in one place?",
+      sentence: "That is a _____. It is made up of many populations (different species) interacting in a shared area.",
+      correct: "community",
+      choices: ["community","ecosystem","population","trophic level"],
+      explain: "Community = multiple populations/species interacting in the same area."
+    },
+    {
+      spirit: "Look— a herd of deer moves beneath my shade. What single word describes all those deer together— individuals of the same kind, in the same place, at the same time?",
+      sentence: "That is a _____. It is a group of individuals of the same species living in a particular area.",
+      correct: "population",
+      choices: ["population","species","community","food web"],
+      explain: "Population = same species, same area, same time."
+    },
+    {
+      spirit: "And what do we call a group of organisms that can interbreed and produce fertile offspring?",
+      sentence: "That is a _____.",
+      correct: "species",
+      choices: ["species","population","community","ecosystem"],
+      explain: "Species = organisms that can interbreed and produce fertile offspring."
+    },
+    {
+      spirit: "Every creature has its appointed place. The owl hunts at dusk; the beetle recycles fallen leaves. What term describes that exact way of life— how it gets food, reproduces, and affects others?",
+      sentence: "That is its _____. It describes an organism’s role in the ecosystem— how it makes a living and interacts with others.",
+      correct: "niche",
+      choices: ["niche","trophic level","food chain","abiotic"],
+      explain: "Niche = the role/‘job’ of an organism in its ecosystem."
+    },
+    {
+      spirit: "Some forces in my forest breathe, grow, and die. Others never lived at all. Name the living category.",
+      sentence: "The living components are _____. (Examples: plants, animals, fungi, bacteria.)",
+      correct: "biotic",
+      choices: ["biotic","abiotic","species","population"],
+      explain: "Biotic = living components."
+    },
+    {
+      spirit: "Now name the non-living category— the silent forces like light, heat, water, pH, and minerals.",
+      sentence: "The non-living components are _____.",
+      correct: "abiotic",
+      choices: ["abiotic","biotic","community","niche"],
+      explain: "Abiotic = non-living components (light, water, temperature, pH, minerals, etc.)."
+    },
+    {
+      spirit: "Every strand of energy begins with producers. What simple sequence shows who eats whom and how energy flows— a straight line of feeding relationships?",
+      sentence: "That is a _____. It is a sequence showing feeding relationships and energy flow (producers start).",
+      correct: "food chain",
+      choices: ["food chain","food web","trophic level","ecosystem"],
+      explain: "Food chain = linear feeding sequence (producers → consumers)."
+    },
+    {
+      spirit: "But life is rarely a straight path. Many chains cross like my tangled roots. What richer picture shows interconnected feeding relationships?",
+      sentence: "That is a _____. It is an interconnecting series of food chains (more realistic).",
+      correct: "food web",
+      choices: ["food web","food chain","population","abiotic"],
+      explain: "Food web = network of linked food chains."
+    },
+    {
+      spirit: "Energy rises in steps: producers, then herbivores, then carnivores. What name do we give each step/position in a food chain or web?",
+      sentence: "That is a _____. (Examples: producer, primary consumer, secondary consumer.)",
+      correct: "trophic level",
+      choices: ["trophic level","niche","community","species"],
+      explain: "Trophic level = position in a food chain/web."
+    },
+    {
+      spirit: "A substance enters the stream. Over time, one fish stores more and more of it in its tissues. What is this build-up inside one organism called?",
+      sentence: "That is _____. It is the build-up of a substance in the tissues of a single organism over time.",
+      correct: "bioaccumulation",
+      choices: ["bioaccumulation","biomagnification","trophic level","food web"],
+      explain: "Bioaccumulation = build-up in one organism."
+    },
+    {
+      spirit: "Worse still… predators eat many contaminated prey, so the concentration rises at each higher trophic level. What is this called?",
+      sentence: "That is _____. It is the increase in concentration at each higher trophic level.",
+      correct: "biomagnification",
+      choices: ["biomagnification","bioaccumulation","community","abiotic"],
+      explain: "Biomagnification = concentration increases up the food chain."
+    }
+  ];
+
+  const chatEl = document.getElementById("chat");
+  const choiceArea = document.getElementById("choiceArea");
+  const blankSentenceEl = document.getElementById("blankSentence");
+  const choicesEl = document.getElementById("choices");
+  const feedbackEl = document.getElementById("feedback");
+  const nextBtn = document.getElementById("nextBtn");
+  const endArea = document.getElementById("endArea");
+  const resultText = document.getElementById("resultText");
+  const forestBox = document.getElementById("forestBox");
+  const forestArtEl = document.getElementById("forestArt");
+
+  const scoreEl = document.getElementById("score");
+  const totalEl = document.getElementById("total");
+  const qnumEl = document.getElementById("qnum");
+  const qtotalEl = document.getElementById("qtotal");
+
+  const speedBtn = document.getElementById("speedBtn");
+  const speedLabel = document.getElementById("speedLabel");
+
+  totalEl.textContent = blanks.length;
+  qtotalEl.textContent = blanks.length;
+
+  const SPEEDS = [
+    { label: "Slow", base: 900 },
+    { label: "Normal", base: 520 },
+    { label: "Fast", base: 220 }
+  ];
+  let speedIndex = 1; // Normal
+
+  let idx = -1;
+  let score = 0;
+  let locked = false;
+  let queueToken = 0;
+
+  function escapeHtml(str){
+    return str.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function addBubble(who, text){
+    const row = document.createElement("div");
+    row.className = "bubbleRow " + who;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    const name = document.createElement("div");
+    name.className = "nameLine " + who;
+    name.textContent = who === "spirit" ? "Tree Spirit" : who === "eco" ? "Ecologist" : "System";
+
+    const body = document.createElement("div");
+    body.innerHTML = escapeHtml(text).replace(/\n/g, "<br/>");
+
+    bubble.appendChild(name);
+    bubble.appendChild(body);
+    row.appendChild(bubble);
+
+    chatEl.appendChild(row);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+
+  function sleep(ms, token){
+    return new Promise(res => setTimeout(() => { if (token === queueToken) res(); }, ms));
+  }
+
+  function updateHUD(){
+    scoreEl.textContent = score;
+    qnumEl.textContent = Math.max(0, idx + 1);
+    speedLabel.textContent = SPEEDS[speedIndex].label;
+  }
+
+  function shuffle(arr){
+    const a = [...arr];
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  async function playIntro(){
+    const token = ++queueToken;
+    chatEl.innerHTML = "";
+    choiceArea.style.display = "none";
+    endArea.style.display = "none";
+    forestBox.style.display = "none";
+
+    for (const line of introLines){
+      addBubble(line.who, line.text);
+      await sleep(SPEEDS[speedIndex].base, token);
+    }
+  }
+
+  async function nextBlank(){
+    const token = ++queueToken;
+    idx++;
+    locked = false;
+    feedbackEl.innerHTML = "";
+    nextBtn.style.display = "none";
+    endArea.style.display = "none";
+
+    if (idx >= blanks.length){
+      await finish();
+      return;
+    }
+
+    choiceArea.style.display = "none";
+
+    const b = blanks[idx];
+
+    addBubble("spirit", b.spirit);
+    await sleep(SPEEDS[speedIndex].base + 120, token);
+
+    blankSentenceEl.innerHTML = escapeHtml(b.sentence).replace("_____", "<b>_____</b>");
+    choicesEl.innerHTML = "";
+    const options = shuffle(b.choices);
+
+    for (const opt of options){
+      const btn = document.createElement("button");
+      btn.className = "choice";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => pick(opt));
+      choicesEl.appendChild(btn);
+    }
+
+    choiceArea.style.display = "block";
+    updateHUD();
+  }
+
+  async function pick(choice){
+    if (locked) return;
+    locked = true;
+
+    const b = blanks[idx];
+    const correct = choice.toLowerCase() === b.correct.toLowerCase();
+
+    [...choicesEl.querySelectorAll("button")].forEach(btn => btn.disabled = true);
+
+    const token = ++queueToken;
+    await sleep(SPEEDS[speedIndex].base, token);
+
+    const completed = b.sentence.replace("_____", b.correct);
+    addBubble("eco", completed);
+
+    if (correct){
+      score++;
+      feedbackEl.innerHTML = `<div class="good">✅ Correct.</div><div class="small">${escapeHtml(b.explain)}</div>`;
+    } else {
+      feedbackEl.innerHTML = `<div class="bad">❌ Not quite.</div>
+        <div class="small"><b>Correct:</b> ${escapeHtml(b.correct)}<br>${escapeHtml(b.explain)}</div>`;
+    }
+
+    nextBtn.style.display = "inline-block";
+    updateHUD();
+  }
+
+  function buildForestArt(){
+    return [
+"                 🌙            ✨",
+"        🌲🌲🌲🌲🌲🌲🌲🌲🌲🌲🌲🌲",
+"      🌲   🌿    🌲   🍄   🌲    🌲",
+"   🌲    🌲   🦉    🌲    🐿️   🌲",
+" 🌲  🍃   🌲      🌲   🌿    🌲   🌲",
+"      ║║║║║║║║║║║║║║║║║║║",
+"      ║  THE LIVING WEB  ║",
+"      ║   welcomes you   ║",
+"      ║║║║║║║║║║║║║║║║║║║",
+"  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+"      🌊  💧   🌊   💧   🌊"
+    ].join("\n");
+  }
+
+  async function finish(){
+    const token = ++queueToken;
+    choiceArea.style.display = "none";
+
+    for (const line of endingLines){
+      addBubble(line.who, line.text);
+      await sleep(SPEEDS[speedIndex].base, token);
+    }
+
+    endArea.style.display = "block";
+
+    const percent = Math.round((score / blanks.length) * 100);
+    const congrats = (percent === 100)
+      ? "CONGRATS! 🌿 Perfect score — you truly speak the language of ecology."
+      : "CONGRATS! 🌿 You passed the Trial and entered the Living Web.";
+
+    resultText.innerHTML =
+      `<b>${congrats}</b><br><br>` +
+      `Final Score: <b>${score}/${blanks.length}</b> (${percent}%)<br>` +
+      `Walk gently… and protect what you study.`;
+
+    forestArtEl.textContent = buildForestArt();
+    forestBox.style.display = "block";
+    qnumEl.textContent = blanks.length;
+  }
+
+  async function start(){
+    idx = -1;
+    score = 0;
+    locked = false;
+    updateHUD();
+    await playIntro();
+    await nextBlank();
+  }
+
+  nextBtn.addEventListener("click", () => nextBlank());
+  document.getElementById("restartBtn").addEventListener("click", () => start());
+  document.getElementById("restartBtnTop").addEventListener("click", () => start());
+  document.getElementById("restartBtnEnd").addEventListener("click", () => start());
+
+  speedBtn.addEventListener("click", () => {
+    speedIndex = (speedIndex + 1) % SPEEDS.length;
+    updateHUD();
+  });
+
+  start();
+</script>
+</body>
+</html>
